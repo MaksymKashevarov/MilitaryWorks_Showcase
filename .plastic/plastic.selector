@@ -1,0 +1,4 @@
+repository "MilitaryWorks Showcase@ValeraChronosphera@cloud"
+  path "/"
+    br "/main"
+    co "/main"

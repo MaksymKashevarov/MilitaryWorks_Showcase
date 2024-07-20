@@ -21,6 +21,9 @@ public class PlayerController : MonoBehaviour
         // Lock the cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Constrain the rotation on the x and z axes to prevent tipping over
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
     }
 
     void Update()

@@ -7,11 +7,13 @@ public class RadarController : MonoBehaviour
     public Transform radarLaser; // Assign the laser object here
     public float detectionRange = 100f; // The range of the radar's detection
     public LayerMask detectionLayer; // Layer for detection (e.g., Aircraft layer)
+    public LayerMask obstructionLayer; // Layer for obstructions (e.g., walls, terrain)
     public float fieldOfViewAngle = 45f; // Field of view angle in degrees
     public int numberOfRaycasts = 10; // Number of raycasts within the field of view
     public float upwardAngle = 45f; // Upward angle for additional raycasts
     public float downwardAngle = 0f; // Downward angle for additional raycasts
     public float raySpeed = 10f; // Speed at which the rays move
+    public float lockOnDuration = 4f; // Duration to follow target after losing sight
 
     private float currentUpwardAngle;
     private float currentDownwardAngle;
@@ -20,6 +22,7 @@ public class RadarController : MonoBehaviour
     private bool movingDownward = true;
     private bool movingUp = true;
     private Transform target;
+    private float targetLostTime;
 
     // State Machine
     private enum RadarState { Search, LockOnTarget }
@@ -32,6 +35,7 @@ public class RadarController : MonoBehaviour
         currentUpwardAngle = upwardAngle;
         currentDownwardAngle = downwardAngle;
         currentIndependentAngle = -45f; // Start the independent rays from -45 degrees
+        targetLostTime = 0f;
     }
 
     void Update()
@@ -154,14 +158,18 @@ public class RadarController : MonoBehaviour
             float angle = -halfFOV + angleStep * i;
             Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
             RaycastHit hit;
-            if (Physics.Raycast(radarLaser.position, direction, out hit, detectionRange, detectionLayer))
+            if (Physics.Raycast(radarLaser.position, direction, out hit, detectionRange, detectionLayer | obstructionLayer))
             {
                 if (hit.transform.CompareTag("Aircraft"))
                 {
-                    target = hit.transform;
-                    currentState = RadarState.LockOnTarget;
-                    Debug.Log("Target Locked: " + target.name);
-                    break;
+                    if (!Physics.Linecast(radarLaser.position, hit.point, obstructionLayer))
+                    {
+                        target = hit.transform;
+                        currentState = RadarState.LockOnTarget;
+                        Debug.Log("Target Locked: " + target.name);
+                        targetLostTime = 0f; // Reset the target lost timer
+                        break;
+                    }
                 }
             }
         }
@@ -176,6 +184,23 @@ public class RadarController : MonoBehaviour
             directionToTarget.y = 0; // Ignore the vertical component to avoid tilting
             Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
             rotationMechanism.rotation = Quaternion.Slerp(rotationMechanism.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+
+            // Perform raycast to check if the target is still in sight
+            if (!IsTargetInSight())
+            {
+                targetLostTime += Time.deltaTime;
+                if (targetLostTime >= lockOnDuration)
+                {
+                    // Return to search state if target is not found within the lock-on duration
+                    currentState = RadarState.Search;
+                    Debug.Log("Target lost for too long, returning to search state.");
+                    target = null;
+                }
+            }
+            else
+            {
+                targetLostTime = 0f; // Reset the target lost timer if the target is still in sight
+            }
         }
         else
         {
@@ -183,6 +208,20 @@ public class RadarController : MonoBehaviour
             currentState = RadarState.Search;
             Debug.Log("Target lost, returning to search state.");
         }
+    }
+
+    bool IsTargetInSight()
+    {
+        Vector3 directionToTarget = target.position - radarLaser.position;
+        RaycastHit hit;
+        if (Physics.Raycast(radarLaser.position, directionToTarget, out hit, detectionRange, detectionLayer | obstructionLayer))
+        {
+            if (hit.transform == target)
+            {
+                return !Physics.Linecast(radarLaser.position, hit.point, obstructionLayer);
+            }
+        }
+        return false;
     }
 
     void OnDrawGizmos()

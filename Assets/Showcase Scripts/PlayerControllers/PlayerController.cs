@@ -5,20 +5,22 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed = 5f;
     public float lookSensitivity = 2f;
     public Camera playerCamera;
-    public float maxVerticalAngle = 90f;
 
     private Vector3 moveDirection;
     private Rigidbody rb;
     private float verticalRotation = 0f;
+    private float maxVerticalAngle = 90f;
 
     // State Machine
     private enum PlayerState { Idle, Moving }
     private PlayerState currentState;
+    private PlayerState previousState;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         currentState = PlayerState.Idle;
+        previousState = currentState;
 
         // Lock the cursor
         Cursor.lockState = CursorLockMode.Locked;
@@ -70,6 +72,10 @@ public class PlayerController : MonoBehaviour
             currentState = PlayerState.Idle;
         }
 
-        Debug.Log("Current State: " + currentState);
+        if (currentState != previousState)
+        {
+            Debug.Log("Current State: " + currentState);
+            previousState = currentState;
+        }
     }
 }

@@ -5,9 +5,11 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed = 5f;
     public float lookSensitivity = 2f;
     public Camera playerCamera;
+    public float maxVerticalAngle = 90f;
 
     private Vector3 moveDirection;
     private Rigidbody rb;
+    private float verticalRotation = 0f;
 
     // State Machine
     private enum PlayerState { Idle, Moving }
@@ -51,7 +53,10 @@ public class PlayerController : MonoBehaviour
 
         transform.Rotate(0, rotateHorizontal, 0);
 
-        playerCamera.transform.localRotation *= Quaternion.Euler(rotateVertical, 0, 0);
+        verticalRotation += rotateVertical;
+        verticalRotation = Mathf.Clamp(verticalRotation, -maxVerticalAngle, maxVerticalAngle);
+
+        playerCamera.transform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
     }
 
     void UpdateState()

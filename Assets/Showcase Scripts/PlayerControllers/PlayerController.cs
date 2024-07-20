@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
     public Camera playerCamera;
 
     private Vector3 moveDirection;
-    private CharacterController characterController;
+    private Rigidbody rb;
 
     // State Machine
     private enum PlayerState { Idle, Moving }
@@ -15,8 +15,12 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        characterController = GetComponent<CharacterController>();
+        rb = GetComponent<Rigidbody>();
         currentState = PlayerState.Idle;
+
+        // Lock the cursor
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
@@ -31,11 +35,10 @@ public class PlayerController : MonoBehaviour
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
 
-        moveDirection = new Vector3(moveX, 0, moveZ);
-        moveDirection = transform.TransformDirection(moveDirection);
+        moveDirection = transform.right * moveX + transform.forward * moveZ;
         moveDirection *= moveSpeed * Time.deltaTime;
 
-        characterController.Move(moveDirection);
+        rb.MovePosition(transform.position + moveDirection);
     }
 
     void HandleRotation()
@@ -44,7 +47,8 @@ public class PlayerController : MonoBehaviour
         float rotateVertical = -Input.GetAxis("Mouse Y") * lookSensitivity;
 
         transform.Rotate(0, rotateHorizontal, 0);
-        playerCamera.transform.Rotate(rotateVertical, 0, 0);
+
+        playerCamera.transform.localRotation *= Quaternion.Euler(rotateVertical, 0, 0);
     }
 
     void UpdateState()

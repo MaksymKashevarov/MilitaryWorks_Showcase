@@ -13,8 +13,12 @@ public class RadarController : MonoBehaviour
     public float downwardAngle = 0f; // Downward angle for additional raycasts
     public float raySpeed = 10f; // Speed at which the rays move
 
-    private float currentAngle;
+    private float currentUpwardAngle;
+    private float currentDownwardAngle;
+    private float currentIndependentAngle;
+    private bool movingUpward = true;
     private bool movingDownward = true;
+    private bool movingUp = true;
     private Transform target;
 
     // State Machine
@@ -25,7 +29,9 @@ public class RadarController : MonoBehaviour
     {
         // Set the initial state to Search
         currentState = RadarState.Search;
-        currentAngle = upwardAngle;
+        currentUpwardAngle = upwardAngle;
+        currentDownwardAngle = downwardAngle;
+        currentIndependentAngle = -45f; // Start the independent rays from -45 degrees
     }
 
     void Update()
@@ -49,12 +55,16 @@ public class RadarController : MonoBehaviour
         {
             rotationMechanism.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.Self);
 
-            // Update the current angle for raycasts
-            UpdateAngle();
+            // Update the current angles for raycasts
+            UpdateUpwardAngle();
+            UpdateDownwardAngle();
+            UpdateIndependentAngle();
 
             // Perform multiple raycasts within the field of view
-            PerformRaycasts(radarLaser.forward); // Horizontal raycasts
-            PerformRaycasts(Quaternion.Euler(currentAngle, 0, 0) * radarLaser.forward); // Upward raycasts
+            PerformRaycasts(radarLaser.forward, numberOfRaycasts); // Horizontal raycasts
+            PerformRaycasts(Quaternion.Euler(currentUpwardAngle, 0, 0) * radarLaser.forward, numberOfRaycasts); // Upward raycasts
+            PerformRaycasts(Quaternion.Euler(currentDownwardAngle, 0, 0) * radarLaser.forward, numberOfRaycasts); // Downward to upward raycasts
+            PerformRaycasts(Quaternion.Euler(currentIndependentAngle, 0, 0) * radarLaser.forward, numberOfRaycasts); // Independent rays
         }
         else
         {
@@ -62,36 +72,84 @@ public class RadarController : MonoBehaviour
         }
     }
 
-    void UpdateAngle()
+    void UpdateUpwardAngle()
+    {
+        float angleChange = raySpeed * Time.deltaTime;
+
+        if (movingUpward)
+        {
+            currentUpwardAngle += angleChange;
+            if (currentUpwardAngle >= upwardAngle)
+            {
+                currentUpwardAngle = upwardAngle;
+                movingUpward = false;
+            }
+        }
+        else
+        {
+            currentUpwardAngle -= angleChange;
+            if (currentUpwardAngle <= downwardAngle)
+            {
+                currentUpwardAngle = downwardAngle;
+                movingUpward = true;
+            }
+        }
+    }
+
+    void UpdateDownwardAngle()
     {
         float angleChange = raySpeed * Time.deltaTime;
 
         if (movingDownward)
         {
-            currentAngle -= angleChange;
-            if (currentAngle <= downwardAngle)
+            currentDownwardAngle += angleChange;
+            if (currentDownwardAngle >= upwardAngle)
             {
-                currentAngle = downwardAngle;
+                currentDownwardAngle = upwardAngle;
                 movingDownward = false;
             }
         }
         else
         {
-            currentAngle += angleChange;
-            if (currentAngle >= upwardAngle)
+            currentDownwardAngle -= angleChange;
+            if (currentDownwardAngle <= downwardAngle)
             {
-                currentAngle = upwardAngle;
+                currentDownwardAngle = downwardAngle;
                 movingDownward = true;
             }
         }
     }
 
-    void PerformRaycasts(Vector3 baseDirection)
+    void UpdateIndependentAngle()
+    {
+        float angleChange = raySpeed * Time.deltaTime;
+
+        if (movingUp)
+        {
+            currentIndependentAngle += angleChange;
+            if (currentIndependentAngle >= 45f)
+            {
+                currentIndependentAngle = 45f;
+                movingUp = false;
+            }
+        }
+        else
+        {
+            currentIndependentAngle -= angleChange;
+            if (currentIndependentAngle <= -45f)
+            {
+                currentIndependentAngle = -45f;
+                movingUp = true;
+            }
+        }
+    }
+
+    void PerformRaycasts(Vector3 baseDirection, int numberOfRays)
     {
         float halfFOV = fieldOfViewAngle / 2;
-        float angleStep = fieldOfViewAngle / numberOfRaycasts;
+        float angleStep = fieldOfViewAngle / numberOfRays;
 
-        for (int i = 0; i < numberOfRaycasts; i++)
+        for (int i = 0; i < numberOfRays; i++)
         {
             float angle = -halfFOV + angleStep * i;
             Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
@@ -129,24 +187,30 @@ public class RadarController : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (currentState == RadarState.Search)
+        if (!Application.isPlaying)
         {
             Gizmos.color = Color.red;
 
             // Draw horizontal raycasts
-            DrawRaycastGizmos(radarLaser.forward);
+            DrawRaycastGizmos(radarLaser.forward, numberOfRaycasts);
 
             // Draw upward raycasts
-            DrawRaycastGizmos(Quaternion.Euler(currentAngle, 0, 0) * radarLaser.forward);
+            DrawRaycastGizmos(Quaternion.Euler(currentUpwardAngle, 0, 0) * radarLaser.forward, numberOfRaycasts);
+
+            // Draw downward to upward raycasts
+            DrawRaycastGizmos(Quaternion.Euler(currentDownwardAngle, 0, 0) * radarLaser.forward, numberOfRaycasts);
+
+            // Draw independent rays
+            DrawRaycastGizmos(Quaternion.Euler(currentIndependentAngle, 0, 0) * radarLaser.forward, numberOfRaycasts);
         }
     }
 
-    void DrawRaycastGizmos(Vector3 baseDirection)
+    void DrawRaycastGizmos(Vector3 baseDirection, int numberOfRays)
     {
         float halfFOV = fieldOfViewAngle / 2;
-        float angleStep = fieldOfViewAngle / numberOfRaycasts;
+        float angleStep = fieldOfViewAngle / numberOfRays;
 
-        for (int i = 0; i < numberOfRaycasts; i++)
+        for (int i = 0; i < numberOfRays; i++)
         {
             float angle = -halfFOV + angleStep * i;
             Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;

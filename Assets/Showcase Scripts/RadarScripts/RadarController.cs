@@ -14,6 +14,8 @@ public class RadarController : MonoBehaviour
     public float downwardAngle = 0f; // Downward angle for additional raycasts
     public float raySpeed = 10f; // Speed at which the rays move
     public float lockOnDuration = 4f; // Duration to follow target after losing sight
+    public bool showRaysInEditor = true; // Toggle to show/hide rays in editor
+    public bool showRaysInGame = true; // Toggle to show/hide rays in game
 
     private float currentUpwardAngle;
     private float currentDownwardAngle;
@@ -25,8 +27,13 @@ public class RadarController : MonoBehaviour
     private float targetLostTime;
 
     // State Machine
-    private enum RadarState { Search, LockOnTarget }
+    public enum RadarState { Search, LockOnTarget }
     private RadarState currentState;
+
+    public RadarState CurrentState
+    {
+        get { return currentState; }
+    }
 
     void Start()
     {
@@ -226,9 +233,29 @@ public class RadarController : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (!Application.isPlaying)
+        if (showRaysInEditor && !Application.isPlaying)
         {
             Gizmos.color = Color.red;
+
+            // Draw horizontal raycasts
+            DrawRaycastGizmos(radarLaser.forward, numberOfRaycasts);
+
+            // Draw upward raycasts
+            DrawRaycastGizmos(Quaternion.Euler(currentUpwardAngle, 0, 0) * radarLaser.forward, numberOfRaycasts);
+
+            // Draw downward to upward raycasts
+            DrawRaycastGizmos(Quaternion.Euler(currentDownwardAngle, 0, 0) * radarLaser.forward, numberOfRaycasts);
+
+            // Draw independent rays
+            DrawRaycastGizmos(Quaternion.Euler(currentIndependentAngle, 0, 0) * radarLaser.forward, numberOfRaycasts);
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (showRaysInGame && Application.isPlaying)
+        {
+            Gizmos.color = Color.green;
 
             // Draw horizontal raycasts
             DrawRaycastGizmos(radarLaser.forward, numberOfRaycasts);

@@ -283,4 +283,13 @@ public class RadarController : MonoBehaviour
             Gizmos.DrawRay(radarLaser.position, direction * detectionRange);
         }
     }
+
+    public Transform GetLockedTarget()
+    {
+        return target;
+    }
 }
+
+
+
+

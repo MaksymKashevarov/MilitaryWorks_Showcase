@@ -4,6 +4,10 @@ public class MissileSlotSensor : MonoBehaviour
 {
     public LayerMask missileLayer; // Layer for the missile
     public bool launchMissileManually = false; // Switch to launch missile manually
+    public MissileLauncher missileLauncher; // Assign the MissileLauncher script here
+
+    private Transform lockedTarget; // The locked target from the missile launcher
+    private bool targetLockedDebugged = false; // To ensure the target is debugged only once
 
     // State Machine
     private enum SlotState { Idle, Armed, Launch }
@@ -33,6 +37,21 @@ public class MissileSlotSensor : MonoBehaviour
                 Debug.LogWarning("Cannot launch missile manually when not in armed state.");
                 launchMissileManually = false; // Reset switch
             }
+        }
+
+        // Read the locked target from the missile launcher
+        if (missileLauncher != null && missileLauncher.CurrentState == MissileLauncher.LauncherState.LockedForAttack)
+        {
+            lockedTarget = missileLauncher.GetLockedTarget();
+            if (!targetLockedDebugged)
+            {
+                Debug.Log("Slot " + gameObject.name + " locked on target: " + lockedTarget.name);
+                targetLockedDebugged = true; // Ensure the target is debugged only once
+            }
+        }
+        else
+        {
+            targetLockedDebugged = false; // Reset when not in LockedForAttack state
         }
     }
 

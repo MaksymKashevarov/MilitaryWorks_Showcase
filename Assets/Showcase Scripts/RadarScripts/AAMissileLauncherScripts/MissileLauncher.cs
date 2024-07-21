@@ -6,9 +6,10 @@ public class MissileLauncher : MonoBehaviour
     public MissileSlotSensor[] missileSlots; // Assign the missile slots with MissileSlotSensor script here
 
     // State Machine
-    private enum LauncherState { Waiting, LockedForAttack }
+    public enum LauncherState { Waiting, LockedForAttack }
     private LauncherState currentState;
     private LauncherState previousState;
+    private Transform lockedTarget; // The locked target from the radar
 
     void Start()
     {
@@ -29,6 +30,7 @@ public class MissileLauncher : MonoBehaviour
                     break;
                 case RadarController.RadarState.LockOnTarget:
                     currentState = LauncherState.LockedForAttack;
+                    lockedTarget = assignedRadar.GetLockedTarget(); // Save the locked target
                     break;
             }
 
@@ -39,6 +41,7 @@ public class MissileLauncher : MonoBehaviour
 
                 if (currentState == LauncherState.LockedForAttack)
                 {
+                    Debug.Log("Locked Target: " + lockedTarget.name); // Debug the locked target once
                     CheckMissilesReadyForAttack();
                 }
 
@@ -82,5 +85,15 @@ public class MissileLauncher : MonoBehaviour
                 slot.SetStateIdle();
             }
         }
+    }
+
+    public Transform GetLockedTarget()
+    {
+        return lockedTarget;
+    }
+
+    public LauncherState CurrentState
+    {
+        get { return currentState; }
     }
 }

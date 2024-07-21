@@ -228,6 +228,7 @@ Transform:
   m_Children:
   - {fileID: 5825419116205309128}
   - {fileID: 1525450556}
+  - {fileID: 1303343708}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
@@ -568,6 +569,77 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!1 &1303343707
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1303343708}
+  - component: {fileID: 1303343709}
+  - component: {fileID: 1303343711}
+  m_Layer: 7
+  m_Name: MissileSlot_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1303343708
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303343707}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.293, y: 0.563, z: -0.3968}
+  m_LocalScale: {x: 0.22519289, y: 0.03925088, z: 0.12839028}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 219771934}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1303343709
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303343707}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1303343711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303343707}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31458bca2c691d347b7510b6ee115ed3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  missileLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  launchMissileManually: 0
+  missileLauncher: {fileID: 1525450557}
 --- !u!1 &1525450555
 GameObject:
   m_ObjectHideFlags: 0
@@ -616,6 +688,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   assignedRadar: {fileID: 8961363137340462601}
+  missileSlots:
+  - {fileID: 1303343711}
 --- !u!65 &1525450558
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -786,8 +860,8 @@ Transform:
   m_GameObject: {fileID: 1565616043}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -13.854, y: -3.6005, z: -8.9132}
-  m_LocalScale: {x: 779.2424, y: 0.3647, z: 785.4132}
+  m_LocalPosition: {x: -13.854, y: -4.21, z: -8.9132}
+  m_LocalScale: {x: 779.2424, y: 1.7289697, z: 785.4132}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1109,9 +1183,12 @@ GameObject:
   - component: {fileID: 5486991099352804294}
   - component: {fileID: 64395812004814731}
   - component: {fileID: 9003208487618022176}
-  m_Layer: 0
-  m_Name: RetopoGroup1
-  m_TagString: Untagged
+  - component: {fileID: 9003208487618022177}
+  - component: {fileID: 9003208487618022178}
+  - component: {fileID: 9003208487618022179}
+  m_Layer: 6
+  m_Name: AGM-88_AA_Missile
+  m_TagString: AA_Missile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1190,7 +1267,7 @@ Transform:
   m_GameObject: {fileID: 6598859217461814898}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.29260805, y: 0.5, z: -0.427}
+  m_LocalPosition: {x: 0.29260805, y: 0.5, z: -0.3955}
   m_LocalScale: {x: 0.0028723448, y: 0.009428717, z: 0.0019374462}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1234,7 +1311,7 @@ Transform:
   m_GameObject: {fileID: 1146122246590138609}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalPosition: {x: -0, y: 3.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1262,6 +1339,71 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4096052549235661535, guid: 80d65cedae980a14f86a4af4f3acdef7, type: 3}
+--- !u!54 &9003208487618022177
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1146122246590138609}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 2
+--- !u!114 &9003208487618022178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1146122246590138609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecfec94bc172b85408a33da3cc7a37b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nose: {fileID: 1916106664}
+  initialSpeed: 10
+  maxSpeed: 1000
+  acceleration: 20
+  fuelAmount: 70
+  fuelConsumptionRate: 10
+  decelerationRate: 1
+--- !u!114 &9003208487618022179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1146122246590138609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecfec94bc172b85408a33da3cc7a37b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nose: {fileID: 1916106664}
+  initialSpeed: 10
+  maxSpeed: 1000
+  acceleration: 20
+  fuelAmount: 70
+  fuelConsumptionRate: 10
+  decelerationRate: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

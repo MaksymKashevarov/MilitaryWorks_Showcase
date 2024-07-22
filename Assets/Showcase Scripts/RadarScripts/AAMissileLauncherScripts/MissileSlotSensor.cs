@@ -17,11 +17,6 @@ public class MissileSlotSensor : MonoBehaviour
     private SlotState currentState;
     private SlotState previousState;
 
-    public string CurrentState
-    {
-        get { return currentState.ToString(); }
-    }
-
     void Start()
     {
         // Set the initial state to Idle
@@ -131,6 +126,11 @@ public class MissileSlotSensor : MonoBehaviour
         }
     }
 
+    public Transform GetHeatSource()
+    {
+        return heatSource;
+    }
+
     public void SetStateIdle()
     {
         currentState = SlotState.Idle;
@@ -158,6 +158,21 @@ public class MissileSlotSensor : MonoBehaviour
         {
             Debug.Log("Slot " + gameObject.name + " is now Launching.");
             previousState = currentState;
+
+            // Switch thruster state to acceleration for the missile in this slot
+            Collider[] colliders = Physics.OverlapBox(transform.position, transform.localScale / 2, Quaternion.identity, missileLayer);
+
+            foreach (Collider col in colliders)
+            {
+                if (col.CompareTag("AA_Missile"))
+                {
+                    ThrusterScript thruster = col.GetComponentInChildren<ThrusterScript>();
+                    if (thruster != null)
+                    {
+                        thruster.SwitchState(ThrusterScript.ThrusterState.Acceleration);
+                    }
+                }
+            }
         }
     }
 

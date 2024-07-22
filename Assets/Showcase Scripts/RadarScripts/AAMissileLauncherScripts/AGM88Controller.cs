@@ -2,101 +2,74 @@ using UnityEngine;
 
 public class AGM88Controller : MonoBehaviour
 {
-    public Transform nose; // Assign the nose object in the inspector
-    public float initialSpeed = 10f; // Initial speed at which the missile flies
-    public float maxSpeed = 1000f; // Maximum speed the missile tries to reach
-    public float acceleration = 20f; // Acceleration rate per second
+    public Transform noseObject; // Assign the nose object of the missile here
+    public float initialSpeed = 10f; // Initial speed of the missile
+    public float maxSpeed = 1000f; // Maximum speed of the missile
+    public float acceleration = 50f; // Acceleration rate of the missile
     public float fuelAmount = 70f; // Amount of fuel in liters
     public float fuelConsumptionRate = 10f; // Fuel consumption rate per second
-    public float decelerationRate = 1f; // Rate at which the missile decelerates after fuel is exhausted
 
-    private MissileSlotSensor slotSensor; // Reference to the slot sensor
-    private bool isLaunched = false; // Indicates if the missile has been launched
-    private bool fuelDepleted = false; // Indicates if the fuel is depleted
-    private float currentSpeed; // Current speed of the missile
+    private bool isLaunched = false;
+    private float currentSpeed;
+    private float currentFuel;
+    private Transform targetHeatSource; // Target heat source to follow
+    private float launchTime; // Time when the missile was launched
 
     void Start()
     {
         currentSpeed = initialSpeed;
-        // Initially try to find and connect to any slot
-        FindAndConnectToSlot();
+        currentFuel = fuelAmount;
     }
 
     void Update()
     {
-        // Continuously check to connect to any slot if not already connected
-        if (slotSensor == null)
-        {
-            FindAndConnectToSlot();
-        }
-
-        // Check the slot state and launch if necessary
-        if (slotSensor != null && slotSensor.GetCurrentState() == "Launch" && !isLaunched)
-        {
-            isLaunched = true;
-        }
-
         if (isLaunched)
         {
-            Fly();
-        }
-    }
-
-    void FindAndConnectToSlot()
-    {
-        Collider[] colliders = Physics.OverlapSphere(transform.position, 0.5f); // Adjust radius as needed
-        foreach (Collider collider in colliders)
-        {
-            if (collider.gameObject.layer == LayerMask.NameToLayer("Missile_Slot"))
+            if (Time.time - launchTime < 0.5f)
             {
-                slotSensor = collider.GetComponent<MissileSlotSensor>();
-                if (slotSensor != null)
+                // Fly straight up for 0.5 seconds
+                transform.position += Vector3.up * currentSpeed * Time.deltaTime;
+            }
+            else
+            {
+                if (currentFuel > 0)
                 {
-                    Debug.Log("Missile connected to slot: " + collider.gameObject.name);
-                    break;
+                    // Accelerate the missile
+                    currentSpeed = Mathf.Min(currentSpeed + acceleration * Time.deltaTime, maxSpeed);
+                    currentFuel -= fuelConsumptionRate * Time.deltaTime;
+
+                    // Move the missile towards the heat source
+                    if (targetHeatSource != null)
+                    {
+                        Vector3 directionToHeatSource = (targetHeatSource.position - transform.position).normalized;
+                        Quaternion targetRotation = Quaternion.LookRotation(directionToHeatSource);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * acceleration);
+                        transform.position += transform.forward * currentSpeed * Time.deltaTime;
+                    }
+                }
+                else
+                {
+                    Debug.Log("Missile out of fuel.");
+                    // Gradually slow down the missile and eventually fall
+                    currentSpeed = Mathf.Max(currentSpeed - acceleration * Time.deltaTime, 0);
+                    if (currentSpeed <= 0)
+                    {
+                        // Optional: Add behavior for when the missile has fully stopped
+                    }
                 }
             }
         }
     }
 
-    void Fly()
+    public void LaunchMissile()
     {
-        if (fuelAmount > 0)
-        {
-            // Consume fuel
-            fuelAmount -= fuelConsumptionRate * Time.deltaTime;
+        isLaunched = true;
+        launchTime = Time.time;
+    }
 
-            // Accelerate the missile until it reaches max speed
-            if (currentSpeed < maxSpeed)
-            {
-                currentSpeed += acceleration * Time.deltaTime;
-                if (currentSpeed > maxSpeed)
-                {
-                    currentSpeed = maxSpeed;
-                }
-            }
-        }
-        else
-        {
-            if (!fuelDepleted)
-            {
-                Debug.Log("Missile out of fuel!");
-                fuelDepleted = true;
-            }
-
-            // Decelerate the missile after fuel is exhausted
-            currentSpeed -= decelerationRate * Time.deltaTime;
-
-            if (currentSpeed < 0)
-            {
-                currentSpeed = 0;
-            }
-        }
-
-        // Move the missile in the direction of its nose
-        transform.position += nose.up * currentSpeed * Time.deltaTime;
-
-        // Rotate the missile to always follow the nose direction
-        transform.rotation = Quaternion.Slerp(transform.rotation, nose.rotation, Time.deltaTime * 5);
+    public void SetTargetHeatSource(Transform heatSource)
+    {
+        targetHeatSource = heatSource;
+        Debug.Log("Missile aimed at heat source: " + heatSource.name);
     }
 }

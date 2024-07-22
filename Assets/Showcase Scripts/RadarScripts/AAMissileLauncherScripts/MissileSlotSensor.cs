@@ -10,6 +10,7 @@ public class MissileSlotSensor : MonoBehaviour
     private Transform lockedTarget; // The locked target from the missile launcher
     private bool targetLockedDebugged = false; // To ensure the target is debugged only once
     private bool heatDetected = false; // To ensure the heat is debugged only once
+    private Transform heatSource; // Detected heat source
 
     // State Machine
     private enum SlotState { Idle, Armed, Launch }
@@ -92,8 +93,10 @@ public class MissileSlotSensor : MonoBehaviour
                 {
                     if (!heatDetected)
                     {
+                        heatSource = col.transform;
                         Debug.Log("Heat detected from engine: " + col.gameObject.name + " with intensity: " + heatGenerator.GetHeatIntensity());
                         heatDetected = true; // Ensure the heat is debugged only once
+                        AimMissileAtHeatSource();
                     }
                     return;
                 }
@@ -102,6 +105,24 @@ public class MissileSlotSensor : MonoBehaviour
         if (!heatDetected)
         {
             Debug.Log("No heat detected for target: " + lockedTarget.name);
+        }
+    }
+
+    void AimMissileAtHeatSource()
+    {
+        // Assign the heat source to the missile
+        Collider[] colliders = Physics.OverlapBox(transform.position, transform.localScale / 2, Quaternion.identity, missileLayer);
+
+        foreach (Collider col in colliders)
+        {
+            if (col.CompareTag("AA_Missile"))
+            {
+                AGM88Controller missileController = col.GetComponent<AGM88Controller>();
+                if (missileController != null)
+                {
+                    missileController.SetTargetHeatSource(heatSource);
+                }
+            }
         }
     }
 
@@ -131,7 +152,25 @@ public class MissileSlotSensor : MonoBehaviour
         if (currentState != previousState)
         {
             Debug.Log("Slot " + gameObject.name + " is now Launching.");
+            LaunchMissileInSlot(); // Launch the missile when the state becomes Launch
             previousState = currentState;
+        }
+    }
+
+    void LaunchMissileInSlot()
+    {
+        Collider[] colliders = Physics.OverlapBox(transform.position, transform.localScale / 2, Quaternion.identity, missileLayer);
+
+        foreach (Collider col in colliders)
+        {
+            if (col.CompareTag("AA_Missile"))
+            {
+                AGM88Controller missileController = col.GetComponent<AGM88Controller>();
+                if (missileController != null)
+                {
+                    missileController.LaunchMissile();
+                }
+            }
         }
     }
 

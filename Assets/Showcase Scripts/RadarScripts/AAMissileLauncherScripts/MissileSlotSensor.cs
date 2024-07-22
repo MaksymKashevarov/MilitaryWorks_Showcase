@@ -17,6 +17,11 @@ public class MissileSlotSensor : MonoBehaviour
     private SlotState currentState;
     private SlotState previousState;
 
+    public string CurrentState
+    {
+        get { return currentState.ToString(); }
+    }
+
     void Start()
     {
         // Set the initial state to Idle
@@ -152,25 +157,7 @@ public class MissileSlotSensor : MonoBehaviour
         if (currentState != previousState)
         {
             Debug.Log("Slot " + gameObject.name + " is now Launching.");
-            LaunchMissileInSlot(); // Launch the missile when the state becomes Launch
             previousState = currentState;
-        }
-    }
-
-    void LaunchMissileInSlot()
-    {
-        Collider[] colliders = Physics.OverlapBox(transform.position, transform.localScale / 2, Quaternion.identity, missileLayer);
-
-        foreach (Collider col in colliders)
-        {
-            if (col.CompareTag("AA_Missile"))
-            {
-                AGM88Controller missileController = col.GetComponent<AGM88Controller>();
-                if (missileController != null)
-                {
-                    missileController.LaunchMissile();
-                }
-            }
         }
     }
 

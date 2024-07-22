@@ -25,7 +25,7 @@ public class RadarController : MonoBehaviour
     private bool movingUp = true;
     private Transform target;
     private float targetLostTime;
-
+    
     // State Machine
     public enum RadarState { Search, LockOnTarget }
     private RadarState currentState;

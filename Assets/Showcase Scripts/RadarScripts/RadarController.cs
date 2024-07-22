@@ -174,6 +174,18 @@ public class RadarController : MonoBehaviour
                         target = hit.transform;
                         currentState = RadarState.LockOnTarget;
                         Debug.Log("Target Locked: " + target.name);
+
+                        // Check if the target has a HeatSignature component and debug if it emits heat
+                        HeatSignature heatSignature = target.GetComponent<HeatSignature>();
+                        if (heatSignature != null)
+                        {
+                            Debug.Log("Locked target emits heat with intensity: " + heatSignature.GetHeatIntensity());
+                        }
+                        else
+                        {
+                            Debug.Log("Locked target does not emit heat.");
+                        }
+
                         targetLostTime = 0f; // Reset the target lost timer
                         break;
                     }
@@ -250,7 +262,6 @@ public class RadarController : MonoBehaviour
             DrawRaycastGizmos(Quaternion.Euler(currentIndependentAngle, 0, 0) * radarLaser.forward, numberOfRaycasts);
         }
     }
-
     void OnDrawGizmosSelected()
     {
         if (showRaysInGame && Application.isPlaying)
@@ -289,7 +300,4 @@ public class RadarController : MonoBehaviour
         return target;
     }
 }
-
-
-
 

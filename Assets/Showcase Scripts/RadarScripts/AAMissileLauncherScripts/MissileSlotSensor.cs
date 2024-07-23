@@ -166,10 +166,10 @@ public class MissileSlotSensor : MonoBehaviour
             {
                 if (col.CompareTag("AA_Missile"))
                 {
-                    ThrusterScript thruster = col.GetComponentInChildren<ThrusterScript>();
-                    if (thruster != null)
+                    AGM88Controller missileController = col.GetComponent<AGM88Controller>();
+                    if (missileController != null)
                     {
-                        thruster.SwitchState(ThrusterScript.ThrusterState.Acceleration);
+                        missileController.ReceiveLaunchCommand();
                     }
                 }
             }

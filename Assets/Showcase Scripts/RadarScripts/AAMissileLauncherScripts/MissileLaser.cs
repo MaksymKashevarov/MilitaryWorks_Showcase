@@ -45,6 +45,8 @@ public class MissileLaser : MonoBehaviour
 
     void CastLaserToEngine()
     {
+        if (targetEngine == null) return;
+
         // Cast a ray from the laser origin to the target engine
         Vector3 directionToEngine = (targetEngine.position - laserOrigin.position).normalized;
         Ray ray = new Ray(laserOrigin.position, directionToEngine);
@@ -72,5 +74,21 @@ public class MissileLaser : MonoBehaviour
             return targetEngine.position;
         }
         return Vector3.zero;
+    }
+
+    public bool IsFacingTarget()
+    {
+        if (targetEngine == null) return false;
+
+        Vector3 directionToTarget = (targetEngine.position - laserOrigin.position).normalized;
+        float dotProduct = Vector3.Dot(laserOrigin.forward, directionToTarget);
+
+        // Check if the laser is approximately facing the target
+        return dotProduct > 0.99f;
+    }
+
+    public void ReceiveCommandFromMissile(Transform targetPosition)
+    {
+        SetTargetEngine(targetPosition);
     }
 }

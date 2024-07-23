@@ -6,6 +6,8 @@ public class ThrusterScript : MonoBehaviour
     private ThrusterState currentState;
 
     public float accelerationForce = 250f; // Acceleration force applied by the thruster
+    private float currentSpeed = 0f;
+    private float currentAcceleration = 0f;
 
     void Start()
     {
@@ -18,6 +20,11 @@ public class ThrusterScript : MonoBehaviour
         {
             ApplyThrust();
         }
+        else
+        {
+            currentAcceleration = 0f;
+            currentSpeed = 0f;
+        }
     }
 
     void ApplyThrust()
@@ -25,6 +32,8 @@ public class ThrusterScript : MonoBehaviour
         Rigidbody rb = GetComponentInParent<Rigidbody>();
         if (rb != null)
         {
+            currentAcceleration = accelerationForce;
+            currentSpeed = rb.velocity.magnitude;
             rb.AddForce(transform.up * accelerationForce, ForceMode.Acceleration);
         }
     }
@@ -37,5 +46,21 @@ public class ThrusterScript : MonoBehaviour
     public ThrusterState CurrentState
     {
         get { return currentState; }
+    }
+
+    public float GetCurrentSpeed()
+    {
+        return currentSpeed;
+    }
+
+    public float GetCurrentAcceleration()
+    {
+        return currentAcceleration;
+    }
+
+    // Method to receive command from missile
+    public void ReceiveCommandFromMissile(ThrusterState newState)
+    {
+        SwitchState(newState);
     }
 }

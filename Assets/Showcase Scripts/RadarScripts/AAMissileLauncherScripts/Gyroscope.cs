@@ -6,19 +6,29 @@ public class Gyroscope : MonoBehaviour
     private Quaternion targetRotation; // Target rotation for the gyroscope
     private bool isRotating = false; // Flag to check if rotation is in progress
 
+    private Transform parentTransform; // Parent transform to rotate
+
+    void Start()
+    {
+        parentTransform = transform.parent; // Get the parent transform
+    }
+
     void Update()
     {
         if (isRotating)
         {
-            // Rotate towards the target rotation
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            // Rotate the parent towards the target rotation
+            parentTransform.rotation = Quaternion.Slerp(parentTransform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
 
             // Check if the rotation is close enough to the target rotation
-            if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f)
+            if (Quaternion.Angle(parentTransform.rotation, targetRotation) < 0.1f)
             {
-                transform.rotation = targetRotation;
+                parentTransform.rotation = targetRotation;
                 isRotating = false;
                 Debug.Log("Gyroscope rotation complete.");
+
+                // Notify the missile that rotation is complete
+                parentTransform.GetComponent<AGM88Controller>()?.OnGyroscopeRotationComplete();
             }
         }
     }
@@ -26,7 +36,7 @@ public class Gyroscope : MonoBehaviour
     // Method to set the target angle and start rotation
     public void SetTargetAngle(Vector3 targetPosition)
     {
-        Vector3 direction = (targetPosition - transform.position).normalized;
+        Vector3 direction = (targetPosition - parentTransform.position).normalized;
         targetRotation = Quaternion.LookRotation(direction);
         isRotating = true;
         Debug.Log("Gyroscope set to rotate towards target angle.");
@@ -44,5 +54,11 @@ public class Gyroscope : MonoBehaviour
         targetRotation = Quaternion.Euler(0, 0, 0);
         isRotating = true;
         Debug.Log("Gyroscope reset to default angle.");
+    }
+
+    // Method to receive command from missile to rotate
+    public void ReceiveCommandFromMissile(Vector3 targetPosition)
+    {
+        SetTargetAngle(targetPosition);
     }
 }

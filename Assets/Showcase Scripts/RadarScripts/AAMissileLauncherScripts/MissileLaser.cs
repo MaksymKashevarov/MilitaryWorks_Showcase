@@ -5,8 +5,9 @@ public class MissileLaser : MonoBehaviour
     public Transform laserOrigin; // The origin point of the laser (e.g., the nose of the missile)
     public LayerMask engineLayer; // Layer for engine objects
     public float laserRange = 1000f; // Range of the laser
-    public LineRenderer laserLine; // LineRenderer component to visualize the laser
+    public Transform noseObject; // The nose object of the missile
 
+    private LineRenderer noseLaserLine; // LineRenderer component on the nose object
     private Transform targetEngine; // The target engine to lock on to
 
     // State Machine
@@ -18,9 +19,18 @@ public class MissileLaser : MonoBehaviour
         // Set the initial state to Waiting
         currentState = LaserState.Waiting;
 
-        if (laserLine == null)
+        // Get the LineRenderer component from the nose object
+        if (noseObject != null)
         {
-            Debug.LogWarning("LineRenderer component is not assigned.");
+            noseLaserLine = noseObject.GetComponent<LineRenderer>();
+            if (noseLaserLine == null)
+            {
+                Debug.LogWarning("LineRenderer component is not assigned to the nose object.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Nose object is not assigned.");
         }
     }
 
@@ -29,10 +39,11 @@ public class MissileLaser : MonoBehaviour
         if (currentState == LaserState.Locked)
         {
             CastLaserToEngine();
+            DebugLaserRotationAngle();
         }
-        else if (laserLine != null)
+        else if (noseLaserLine != null)
         {
-            laserLine.enabled = false; // Disable the laser when not locked
+            noseLaserLine.enabled = false; // Disable the laser when not locked
         }
     }
 
@@ -45,11 +56,11 @@ public class MissileLaser : MonoBehaviour
 
     void CastLaserToEngine()
     {
-        if (targetEngine == null) return;
+        if (targetEngine == null || noseLaserLine == null) return;
 
-        // Cast a ray from the laser origin to the target engine
-        Vector3 directionToEngine = (targetEngine.position - laserOrigin.position).normalized;
-        Ray ray = new Ray(laserOrigin.position, directionToEngine);
+        // Cast a ray from the nose object to the target engine
+        Vector3 directionToEngine = (targetEngine.position - noseObject.position).normalized;
+        Ray ray = new Ray(noseObject.position, directionToEngine);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, laserRange, engineLayer))
@@ -57,14 +68,17 @@ public class MissileLaser : MonoBehaviour
             if (hit.transform == targetEngine)
             {
                 // Draw the laser
-                if (laserLine != null)
-                {
-                    laserLine.enabled = true;
-                    laserLine.SetPosition(0, laserOrigin.position);
-                    laserLine.SetPosition(1, hit.point);
-                }
+                noseLaserLine.enabled = true;
+                noseLaserLine.SetPosition(0, noseObject.position);
+                noseLaserLine.SetPosition(1, hit.point);
             }
         }
+    }
+
+    void DebugLaserRotationAngle()
+    {
+        Vector3 laserEulerAngles = noseObject.eulerAngles;
+        Debug.Log("Nose Laser Rotation Angle: " + laserEulerAngles);
     }
 
     public Vector3 GetLockedTargetPosition()
@@ -80,15 +94,15 @@ public class MissileLaser : MonoBehaviour
     {
         if (targetEngine == null) return false;
 
-        Vector3 directionToTarget = (targetEngine.position - laserOrigin.position).normalized;
-        float dotProduct = Vector3.Dot(laserOrigin.forward, directionToTarget);
+        Vector3 directionToTarget = (targetEngine.position - noseObject.position).normalized;
+        float dotProduct = Vector3.Dot(noseObject.forward, directionToTarget);
 
         // Check if the laser is approximately facing the target
         return dotProduct > 0.99f;
     }
 
-    public void ReceiveCommandFromMissile(Transform targetPosition)
+    public Vector3 GetLaserAngle()
     {
-        SetTargetEngine(targetPosition);
+        return noseObject.eulerAngles;
     }
 }

@@ -8,9 +8,13 @@ public class Gyroscope : MonoBehaviour
 
     private Transform parentTransform; // Parent transform to rotate
 
+    private enum GyroState { Inactive, Rotating }
+    private GyroState currentState;
+
     void Start()
     {
         parentTransform = transform.parent; // Get the parent transform
+        currentState = GyroState.Inactive;
     }
 
     void Update()
@@ -39,6 +43,7 @@ public class Gyroscope : MonoBehaviour
         Vector3 direction = (targetPosition - parentTransform.position).normalized;
         targetRotation = Quaternion.LookRotation(direction);
         isRotating = true;
+        currentState = GyroState.Rotating;
         Debug.Log("Gyroscope set to rotate towards target angle.");
     }
 
@@ -60,5 +65,11 @@ public class Gyroscope : MonoBehaviour
     public void ReceiveCommandFromMissile(Vector3 targetPosition)
     {
         SetTargetAngle(targetPosition);
+    }
+
+    // Method to start rotation based on angle data received from missile
+    public void StartRotation(Vector3 angleData)
+    {
+        SetTargetAngle(angleData);
     }
 }

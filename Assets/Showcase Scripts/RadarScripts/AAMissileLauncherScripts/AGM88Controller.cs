@@ -4,7 +4,6 @@ public class AGM88Controller : MonoBehaviour
 {
     public float fuelAmount = 70f; // Amount of fuel in liters
     public float fuelConsumptionRate = 10f; // Fuel consumption rate per second
-    public LineRenderer trajectoryLine; // LineRenderer for visualizing the trajectory
 
     private bool isLaunched = false;
     private float currentFuel;
@@ -26,13 +25,6 @@ public class AGM88Controller : MonoBehaviour
         gyroscope = GetComponentInChildren<Gyroscope>();
         missileLaser = GetComponentInChildren<MissileLaser>();
         currentState = MissileState.Idle;
-
-        if (trajectoryLine == null)
-        {
-            trajectoryLine = gameObject.AddComponent<LineRenderer>();
-            trajectoryLine.startWidth = 0.1f;
-            trajectoryLine.endWidth = 0.1f;
-        }
     }
 
     void Update()
@@ -55,8 +47,6 @@ public class AGM88Controller : MonoBehaviour
                 HandleHoming();
                 break;
         }
-
-        UpdateTrajectory();
     }
 
     void HandleInitialFlight()
@@ -65,7 +55,6 @@ public class AGM88Controller : MonoBehaviour
         {
             // The missile flies up
             transform.position += transform.up * thruster.GetCurrentSpeed() * Time.deltaTime;
-            gyroscope.SetTargetAngle(targetPosition); // Ensure gyroscope starts updating
             Invoke("SwitchToAimingState", initialFlightDuration);
         }
         else
@@ -76,15 +65,17 @@ public class AGM88Controller : MonoBehaviour
 
     void HandleAiming()
     {
-        if (gyroscope.HasReachedTargetAngle() && missileLaser.IsFacingTarget())
+        Vector3 laserAngle = missileLaser.GetLaserAngle();
+        gyroscope.ReceiveCommandFromMissile(laserAngle);
+
+        if (gyroscope.HasReachedTargetAngle())
         {
-            currentState = MissileState.Homing;
-            Debug.Log("Missile state changed to Homing");
-            thruster.SwitchState(ThrusterScript.ThrusterState.Acceleration);
-        }
-        else
-        {
-            gyroscope.SetTargetAngle(missileLaser.GetLockedTargetPosition());
+            if (missileLaser.IsFacingTarget())
+            {
+                currentState = MissileState.Homing;
+                Debug.Log("Missile state changed to Homing");
+                thruster.SwitchState(ThrusterScript.ThrusterState.Acceleration);
+            }
         }
     }
 
@@ -161,21 +152,8 @@ public class AGM88Controller : MonoBehaviour
         }
     }
 
-    private void UpdateTrajectory()
+    public void OnLaserAngleReceived(Vector3 angleData)
     {
-        trajectoryLine.positionCount = 3;
-        trajectoryLine.SetPosition(0, transform.position);
-
-        if (currentState == MissileState.InitialFlight)
-        {
-            Vector3 initialFlightEnd = transform.position + transform.up * initialFlightDuration * thruster.GetCurrentSpeed();
-            trajectoryLine.SetPosition(1, initialFlightEnd);
-            trajectoryLine.SetPosition(2, targetPosition);
-        }
-        else if (currentState == MissileState.Aiming || currentState == MissileState.Homing)
-        {
-            trajectoryLine.SetPosition(1, transform.position);
-            trajectoryLine.SetPosition(2, targetPosition);
-        }
+        gyroscope.ReceiveCommandFromMissile(angleData);
     }
 }

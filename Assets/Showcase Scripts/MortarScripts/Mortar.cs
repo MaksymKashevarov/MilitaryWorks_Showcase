@@ -13,8 +13,9 @@ public class Mortar : MonoBehaviour
     [Header("Developer Tools")]
     public GameObject selectedShell; // Selected shell prefab from the list
     public Transform pointer; // Pointer to set the rotation of the shell when spawned
-    public float angle; // Angle to set the mortar
     public float azimuth; // Azimuth to set the mortar
+    public float angle; // Angle to set the mortar
+    public bool launchShell; // Checkbox to launch the shell
 
     // Mortar State Machine
     private enum MortarState { Empty, Armed, Launch }
@@ -31,8 +32,15 @@ public class Mortar : MonoBehaviour
 
     void Update()
     {
-        // Adjust the mortar's angle and azimuth based on the input values
-        transform.localEulerAngles = new Vector3(-angle, azimuth, 0);
+        // Adjust the mortar's azimuth and angle based on the input values
+        transform.localEulerAngles = new Vector3(angle, azimuth, 0);
+
+        // Check if a shell is selected and switch state to Armed
+        if (currentState == MortarState.Empty && selectedShell != null)
+        {
+            Debug.Log("Shell ready. Mortar state: Armed");
+            currentState = MortarState.Armed;
+        }
 
         // Handle state transitions
         switch (currentState)
@@ -47,26 +55,43 @@ public class Mortar : MonoBehaviour
                 HandleLaunchState();
                 break;
         }
+
+        // Check if launch checkbox is selected
+        if (launchShell)
+        {
+            launchShell = false; // Reset the checkbox
+            if (currentState == MortarState.Armed)
+            {
+                currentState = MortarState.Launch;
+                Debug.Log("Mortar state: Launch");
+                Invoke("SwitchToEmptyState", 0.2f);
+            }
+            else
+            {
+                Debug.LogError("Launch error: Mortar is not armed.");
+            }
+        }
     }
 
     void HandleEmptyState()
     {
         // Implement the behavior for the Empty state
-        // For example, waiting for reload input
     }
 
     void HandleArmedState()
     {
         // Implement the behavior for the Armed state
-        // For example, waiting for launch input
     }
 
     void HandleLaunchState()
     {
         // Implement the behavior for the Launch state
-        // For example, applying the launch force and transitioning to Empty state
-        if (currentShell != null)
+        if (currentShell == null)
         {
+            currentShell = Instantiate(selectedShell, transform);
+            currentShell.transform.localPosition = new Vector3(0.1027f, -0.0258f, 0.7455f);
+            currentShell.transform.rotation = pointer.rotation;
+
             Rigidbody rb = currentShell.GetComponent<Rigidbody>();
             if (rb != null)
             {
@@ -74,9 +99,18 @@ public class Mortar : MonoBehaviour
                 rb.AddForce(transform.up * launchForce, ForceMode.Impulse);
                 currentShell.transform.SetParent(null);
             }
+            else
+            {
+                Debug.LogError("Launch error: Shell Rigidbody not found.");
+            }
         }
+    }
 
-        Invoke("SwitchToEmptyState", 3f);
+    void SwitchToEmptyState()
+    {
+        currentState = MortarState.Empty;
+        Debug.Log("Mortar state: Empty");
+        currentShell = null; // Reset the current shell
     }
 
     public void Reload()
@@ -100,11 +134,5 @@ public class Mortar : MonoBehaviour
             currentState = MortarState.Launch;
             Debug.Log("Mortar state: Launch");
         }
-    }
-
-    void SwitchToEmptyState()
-    {
-        currentState = MortarState.Empty;
-        Debug.Log("Mortar state: Empty");
     }
 }

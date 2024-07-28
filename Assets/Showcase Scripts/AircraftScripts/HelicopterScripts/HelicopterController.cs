@@ -28,6 +28,13 @@ public class HelicopterController : MonoBehaviour
     public float maxSoundDistance = 50f; // Maximum distance for zero volume
     public float maxVolume = 1.0f; // Maximum volume of the sound
 
+    // Door reference
+    public Transform helicopterDoor;
+    private Vector3 doorOpenPosition = new Vector3(0f, 0f, -7.89f); // Local open position of the door
+    private Vector3 doorClosedPosition = Vector3.zero; // Assuming the default local position is the closed position
+    public float doorSlideSpeed = 2f; // Speed at which the door slides
+    private bool isClosingDoor = false;
+
     void Start()
     {
         // Initialize the state
@@ -40,6 +47,11 @@ public class HelicopterController : MonoBehaviour
         audioSource.minDistance = minSoundDistance;
         audioSource.maxDistance = maxSoundDistance;
         audioSource.volume = maxVolume;
+
+        if (helicopterDoor != null)
+        {
+            doorClosedPosition = helicopterDoor.localPosition; // Save the initial local position as closed position
+        }
     }
 
     void Update()
@@ -72,6 +84,9 @@ public class HelicopterController : MonoBehaviour
 
         // Update rotor speed and rotation
         UpdateRotors();
+
+        // Update door position
+        UpdateDoorPosition();
     }
 
     void HandleIdleState()
@@ -169,6 +184,38 @@ public class HelicopterController : MonoBehaviour
                 hasStoppedSpinning = false;
             }
         }
+    }
+
+    void UpdateDoorPosition()
+    {
+        if (helicopterDoor != null)
+        {
+            if (currentState == HelicopterState.Idle)
+            {
+                helicopterDoor.localPosition = Vector3.Lerp(helicopterDoor.localPosition, doorOpenPosition, Time.deltaTime * doorSlideSpeed);
+                isClosingDoor = false;
+            }
+            else if (!isClosingDoor)
+            {
+                isClosingDoor = true;
+                Invoke("StartClosingDoor", 5f);
+            }
+        }
+    }
+
+    void StartClosingDoor()
+    {
+        StartCoroutine(CloseDoor());
+    }
+
+    System.Collections.IEnumerator CloseDoor()
+    {
+        while (helicopterDoor.localPosition != doorClosedPosition)
+        {
+            helicopterDoor.localPosition = Vector3.Lerp(helicopterDoor.localPosition, doorClosedPosition, Time.deltaTime * doorSlideSpeed);
+            yield return null;
+        }
+        isClosingDoor = false; // Reset the flag once the door is closed
     }
 
     public void SwitchToFlyingState()

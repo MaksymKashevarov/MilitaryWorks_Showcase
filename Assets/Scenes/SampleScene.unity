@@ -21161,11 +21161,12 @@ MonoBehaviour:
   weight: 55
   allowedShells:
   - {fileID: 222130844299172648, guid: 5ae08889473a0774abcdc48a302eedb9, type: 3}
-  launchForce: 3
+  launchForce: 15
   selectedShell: {fileID: 222130844299172648, guid: 5ae08889473a0774abcdc48a302eedb9, type: 3}
   pointer: {fileID: 1375938646}
-  angle: 90
   azimuth: 0
+  angle: -90
+  launchShell: 0
   currentState: 0
 --- !u!23 &6842734077279739607
 MeshRenderer:

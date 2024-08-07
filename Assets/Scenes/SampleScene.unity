@@ -3792,6 +3792,10 @@ MonoBehaviour:
   mainRotor: {fileID: 5255301899217500012}
   backRotor: {fileID: 1558761623}
   maxRotorSpeed: 3000
+  liftOffSpeed: 2
+  liftOffHeight: 5
+  bounceHeight: 0.5
+  bounceSpeed: 1
   engineStartUpSound: {fileID: 8300000, guid: 22029328ceb781941a352b15c2166003, type: 3}
   flightSound: {fileID: 8300000, guid: 663f2dd211e645240b3281310c000ba6, type: 3}
   minSoundDistance: 1

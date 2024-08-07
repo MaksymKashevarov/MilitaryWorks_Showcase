@@ -15,6 +15,13 @@ public class HelicopterController : MonoBehaviour
     private float rotorAcceleration; // Rotor acceleration rate
     private float currentRotorSpeed = 0f; // Current rotor speed
 
+    // Lift-off parameters
+    public float liftOffSpeed = 2f; // Speed at which the helicopter lifts off
+    public float liftOffHeight = 5f; // Height the helicopter should reach during lift-off
+    public float bounceHeight = 0.5f; // Height for the bounce effect
+    public float bounceSpeed = 1f; // Speed for the bounce effect
+    private bool isLiftingOff = false;
+
     // Audio clips
     public AudioClip engineStartUpSound;
     public AudioClip flightSound;
@@ -124,8 +131,43 @@ public class HelicopterController : MonoBehaviour
 
     void HandleFlyingState()
     {
-        // Implement the behavior for the Flying state
-        // For example, handling the flight mechanics
+        if (!isLiftingOff)
+        {
+            isLiftingOff = true;
+            StartCoroutine(LiftOff());
+        }
+    }
+
+    System.Collections.IEnumerator LiftOff()
+    {
+        float startY = transform.position.y;
+        float targetY = startY + liftOffHeight;
+
+        // Lift off smoothly to the target height
+        while (transform.position.y < targetY)
+        {
+            transform.position += Vector3.up * liftOffSpeed * Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = new Vector3(transform.position.x, targetY, transform.position.z);
+        Debug.Log("Helicopter has lifted off.");
+
+        // Implement the bounce effect
+        float bounceTargetY = targetY + bounceHeight;
+        while (transform.position.y < bounceTargetY)
+        {
+            transform.position += Vector3.up * bounceSpeed * Time.deltaTime;
+            yield return null;
+        }
+
+        while (transform.position.y > targetY)
+        {
+            transform.position -= Vector3.up * bounceSpeed * Time.deltaTime;
+            yield return null;
+        }
+
+        Debug.Log("Helicopter has completed lift-off and bounce.");
     }
 
     void UpdateRotors()

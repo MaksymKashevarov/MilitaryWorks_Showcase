@@ -42,6 +42,31 @@ public class HelicopterController : MonoBehaviour
     public float doorSlideSpeed = 2f; // Speed at which the door slides
     private bool isClosingDoor = false;
 
+    // Rigidbody reference
+    private Rigidbody rb;
+
+    // Control parameters
+    public float pitchSpeed = 5f; // Speed of pitching
+    public float yawSpeed = 5f;   // Speed of yawing
+    public float rollSpeed = 5f;  // Speed of rolling
+    public float throttleSpeed = 10f; // Speed of throttle (vertical control)
+    public float maxThrust = 500f; // Maximum thrust force
+
+    // Aerodynamic parameters
+    private float dragCoefficient;
+    private float liftCoefficient;
+    private float airDensity;
+
+    // Keycodes for controls
+    public KeyCode pitchUpKey = KeyCode.W;
+    public KeyCode pitchDownKey = KeyCode.S;
+    public KeyCode yawLeftKey = KeyCode.A;
+    public KeyCode yawRightKey = KeyCode.D;
+    public KeyCode rollLeftKey = KeyCode.Q;
+    public KeyCode rollRightKey = KeyCode.E;
+    public KeyCode throttleUpKey = KeyCode.LeftShift;
+    public KeyCode throttleDownKey = KeyCode.LeftControl;
+
     void Start()
     {
         // Initialize the state
@@ -59,6 +84,23 @@ public class HelicopterController : MonoBehaviour
         {
             doorClosedPosition = helicopterDoor.localPosition; // Save the initial local position as closed position
         }
+
+        // Get the Rigidbody component
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbody component is missing!");
+        }
+
+        // Set the Rigidbody parameters to ensure realistic physics
+        rb.useGravity = true;
+        rb.drag = 1f;
+        rb.angularDrag = 2f;
+
+        // Get aerodynamic parameters from the global environment
+        airDensity = GlobalEnvironment.GetAirDensity();
+        dragCoefficient = GlobalEnvironment.GetDragCoefficient();
+        liftCoefficient = GlobalEnvironment.GetLiftCoefficient();
     }
 
     void Update()
@@ -84,16 +126,22 @@ public class HelicopterController : MonoBehaviour
         {
             SwitchToIdleState();
         }
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            SwitchToInitialStartState();
-        }
 
         // Update rotor speed and rotation
         UpdateRotors();
 
         // Update door position
         UpdateDoorPosition();
+    }
+
+    void FixedUpdate()
+    {
+        // Apply controls and aerodynamics only if in Flying state
+        if (currentState == HelicopterState.Flying)
+        {
+            ApplyFlightControls();
+            ApplyAerodynamics();
+        }
     }
 
     void HandleIdleState()
@@ -279,5 +327,61 @@ public class HelicopterController : MonoBehaviour
     {
         currentState = HelicopterState.InitialStart;
         Debug.Log("Helicopter state: InitialStart");
+    }
+
+    void ApplyFlightControls()
+    {
+        // Get input for pitch, yaw, roll, and throttle using KeyCodes
+        float pitch = 0f;
+        if (Input.GetKey(pitchUpKey)) pitch = pitchSpeed;
+        if (Input.GetKey(pitchDownKey)) pitch = -pitchSpeed;
+
+        float yaw = 0f;
+        if (Input.GetKey(yawLeftKey)) yaw = -yawSpeed;
+        if (Input.GetKey(yawRightKey)) yaw = yawSpeed;
+
+        float roll = 0f;
+        if (Input.GetKey(rollLeftKey)) roll = -rollSpeed;
+        if (Input.GetKey(rollRightKey)) roll = rollSpeed;
+
+        float throttle = 0f;
+        if (Input.GetKey(throttleUpKey)) throttle = throttleSpeed;
+        if (Input.GetKey(throttleDownKey)) throttle = -throttleSpeed;
+
+        // Calculate lift force based on the throttle and environmental air density
+        float liftForce = throttle * maxThrust * airDensity;
+
+        // Apply lift force
+        rb.AddForce(Vector3.up * liftForce);
+
+        // Apply pitch (forward/backward tilt)
+        rb.AddTorque(transform.right * pitch);
+
+        // Apply yaw (left/right rotation)
+        rb.AddTorque(transform.up * yaw);
+
+        // Apply roll (tilting left/right)
+        rb.AddTorque(transform.forward * -roll);
+
+        // Gravity and drag are naturally applied by the Rigidbody component
+    }
+
+    void ApplyAerodynamics()
+    {
+        // Get the helicopter's velocity
+        Vector3 velocity = rb.velocity;
+
+        // Calculate lift force
+        float liftMagnitude = liftCoefficient * airDensity * velocity.sqrMagnitude * 0.5f;
+        Vector3 liftDirection = transform.up;
+        Vector3 liftForce = liftMagnitude * liftDirection;
+
+        // Calculate drag force
+        float dragMagnitude = dragCoefficient * airDensity * velocity.sqrMagnitude * 0.5f;
+        Vector3 dragForce = -dragMagnitude * velocity.normalized;
+
+        // Apply the aerodynamic forces
+        rb.AddForce(liftForce);
+        rb.AddForce(dragForce);
     }
 }

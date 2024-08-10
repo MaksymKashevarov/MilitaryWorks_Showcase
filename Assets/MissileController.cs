@@ -12,6 +12,7 @@ public class MissileController : MonoBehaviour
     public float acceleration = 100f; // Acceleration rate of the missile
 
     public Transform leadingAxis; // Leading axis for the missile flight
+    public Transform thruster; // Assign the thruster object
 
     private Rigidbody rb;
     private float currentSpeed;
@@ -27,6 +28,11 @@ public class MissileController : MonoBehaviour
     {
         HandleFlapControl();
         UpdateFlapRotation();
+
+        if (Input.GetKey(KeyCode.Space))
+        {
+            ActivateThruster();
+        }
     }
 
     void FixedUpdate()
@@ -71,5 +77,17 @@ public class MissileController : MonoBehaviour
 
         Vector3 torqueDirection = leadingAxis.right * currentFlapAngle; // Changed to use the right vector for torque
         rb.AddTorque(torqueDirection * flapRotationSpeed * Time.deltaTime, ForceMode.Force);
+    }
+
+    void ActivateThruster()
+    {
+        if (thruster != null)
+        {
+            // Calculate the thrust force based on the leading axis and apply it along the Z axis
+            Vector3 thrustForce = leadingAxis.forward * acceleration;
+            rb.AddForce(thrustForce, ForceMode.Acceleration);
+
+            // You can add a visual or sound effect to represent the thruster activation here
+        }
     }
 }

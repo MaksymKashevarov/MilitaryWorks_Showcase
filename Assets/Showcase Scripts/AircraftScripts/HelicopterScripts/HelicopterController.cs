@@ -49,8 +49,17 @@ public class HelicopterController : MonoBehaviour
     public float pitchSpeed = 5f; // Speed of pitching
     public float yawSpeed = 5f;   // Speed of yawing
     public float rollSpeed = 5f;  // Speed of rolling
-    public float throttleSpeed = 10f; // Speed of throttle (vertical control)
-    public float maxThrust = 500f; // Maximum thrust force
+
+    // Movement parameters
+    public float forwardSpeed = 20f; // Speed at which the helicopter moves forward
+    public float sideSpeed = 15f;    // Speed at which the helicopter moves sideways
+    public float maxBankAngle = 30f; // Maximum angle before instability
+    public float instabilityFactor = 0.5f; // Factor to increase instability
+
+    // Lift control parameters
+    public float maxThrust = 500f; // Maximum thrust force (set in Inspector)
+    private float currentThrust = 0f; // Current thrust force applied
+    public float thrustChangeRate = 100f; // Rate at which thrust increases or decreases
 
     // Aerodynamic parameters
     private float dragCoefficient;
@@ -101,6 +110,9 @@ public class HelicopterController : MonoBehaviour
         airDensity = GlobalEnvironment.GetAirDensity();
         dragCoefficient = GlobalEnvironment.GetDragCoefficient();
         liftCoefficient = GlobalEnvironment.GetLiftCoefficient();
+
+        // Initialize current thrust to minimum (0)
+        currentThrust = 0f;
     }
 
     void Update()
@@ -132,6 +144,9 @@ public class HelicopterController : MonoBehaviour
 
         // Update door position
         UpdateDoorPosition();
+
+        // Adjust lift force based on player input
+        UpdateLiftForce();
     }
 
     void FixedUpdate()
@@ -141,13 +156,13 @@ public class HelicopterController : MonoBehaviour
         {
             ApplyFlightControls();
             ApplyAerodynamics();
+            ApplyRealisticMovement();
         }
     }
 
     void HandleIdleState()
     {
         // Implement the behavior for the Idle state
-        // For example, checking for an input to switch to the InitialStart state
     }
 
     void HandleInitialStartState()
@@ -331,7 +346,7 @@ public class HelicopterController : MonoBehaviour
 
     void ApplyFlightControls()
     {
-        // Get input for pitch, yaw, roll, and throttle using KeyCodes
+        // Get input for pitch, yaw, roll using KeyCodes
         float pitch = 0f;
         if (Input.GetKey(pitchUpKey)) pitch = pitchSpeed;
         if (Input.GetKey(pitchDownKey)) pitch = -pitchSpeed;
@@ -343,16 +358,6 @@ public class HelicopterController : MonoBehaviour
         float roll = 0f;
         if (Input.GetKey(rollLeftKey)) roll = -rollSpeed;
         if (Input.GetKey(rollRightKey)) roll = rollSpeed;
-
-        float throttle = 0f;
-        if (Input.GetKey(throttleUpKey)) throttle = throttleSpeed;
-        if (Input.GetKey(throttleDownKey)) throttle = -throttleSpeed;
-
-        // Calculate lift force based on the throttle and environmental air density
-        float liftForce = throttle * maxThrust * airDensity;
-
-        // Apply lift force
-        rb.AddForce(Vector3.up * liftForce);
 
         // Apply pitch (forward/backward tilt)
         rb.AddTorque(transform.right * pitch);
@@ -383,5 +388,55 @@ public class HelicopterController : MonoBehaviour
         // Apply the aerodynamic forces
         rb.AddForce(liftForce);
         rb.AddForce(dragForce);
+    }
+
+    void UpdateLiftForce()
+    {
+        // Adjust thrust based on player input within the allowed range
+        if (Input.GetKey(throttleUpKey))
+        {
+            currentThrust += thrustChangeRate * Time.deltaTime;
+            currentThrust = Mathf.Clamp(currentThrust, 0f, maxThrust); // Clamp between 0 and maxThrust
+        }
+        else if (Input.GetKey(throttleDownKey))
+        {
+            currentThrust -= thrustChangeRate * Time.deltaTime;
+            currentThrust = Mathf.Clamp(currentThrust, 0f, maxThrust); // Clamp between 0 and maxThrust
+        }
+
+        // Apply the lift force calculated based on the current thrust
+        float liftForce = currentThrust * airDensity;
+        rb.AddForce(Vector3.up * liftForce);
+    }
+
+    void ApplyRealisticMovement()
+    {
+        // Get the helicopter's forward direction
+        Vector3 forwardDirection = transform.forward;
+        Vector3 rightDirection = transform.right;
+
+        // Adjust speed based on pitch and roll
+        if (Input.GetKey(pitchUpKey) || Input.GetKey(pitchDownKey))
+        {
+            float forwardThrust = currentThrust * Mathf.Cos(Mathf.Deg2Rad * Vector3.Angle(Vector3.up, transform.up));
+            rb.AddForce(forwardDirection * forwardThrust);
+        }
+
+        if (Input.GetKey(rollLeftKey) || Input.GetKey(rollRightKey))
+        {
+            float sideThrust = currentThrust * Mathf.Sin(Mathf.Deg2Rad * Vector3.Angle(Vector3.up, transform.up));
+            rb.AddForce(rightDirection * sideThrust);
+        }
+
+        // Check for instability based on excessive pitch or roll angles
+        if (Mathf.Abs(transform.eulerAngles.x) > maxBankAngle || Mathf.Abs(transform.eulerAngles.z) > maxBankAngle)
+        {
+            Vector3 instability = new Vector3(
+                Random.Range(-instabilityFactor, instabilityFactor),
+                Random.Range(-instabilityFactor, instabilityFactor),
+                Random.Range(-instabilityFactor, instabilityFactor)
+            );
+            rb.AddTorque(instability);
+        }
     }
 }
